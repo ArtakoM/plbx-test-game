@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { Player } from '../objects/Player';
 
-const COIN_FRAME_SIZE = 1024;
+const COIN_FRAME_SIZE = 581;
 
 // Triangle arc heights as fraction of screen height above ground
 const ARC_HEIGHTS = [0.08, 0.20, 0.27, 0.20, 0.08];
@@ -50,7 +50,7 @@ export class CoinManager {
       coin.setScale(coinScale);
       const body = coin.body as Phaser.Physics.Arcade.Body;
       body.setAllowGravity(false);
-      body.setCircle(400, 112, 112);
+      body.setCircle(230, 60, 60);
     }
   }
 

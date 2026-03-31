@@ -12,16 +12,18 @@ export class UIManager {
     const h = scene.scale.height;
     const fs = Math.min(w * 0.05, 40);
 
-    this.heartsText = scene.add.text(16, 16, this.getHeartsString(3), {
+    const centerY = 16 + fs / 2;
+
+    this.heartsText = scene.add.text(16, centerY, this.getHeartsString(3), {
       fontSize: `${fs}px`,
     })
+      .setOrigin(0, 0.5)
       .setScrollFactor(0)
       .setDepth(100);
 
-    // Coin icon + score number (top-right, vertically centered on same line)
-    const iconSize = fs * 1.6;
-    const coinScale = iconSize / 1024;
-    const centerY = 20 + fs / 2;
+    // Coin icon + score number (top-right, vertically aligned with hearts)
+    const iconSize = fs * 1.0;
+    const coinScale = iconSize / 581;
 
     this.scoreText = scene.add.text(w - 20, centerY, '0', {
       fontFamily: 'Arial',

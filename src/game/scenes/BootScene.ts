@@ -5,6 +5,7 @@ import enemyImg from '../../../assets/enemy.webp';
 import coneImg from '../../../assets/cone.webp';
 import coinImg from '../../../assets/coin.webp';
 import bgFarImg from '../../../assets/runner-background.webp';
+import flashStarImg from '../../../assets/flash-star.png';
 import bannerPrImg from '../../../assets/banner-pr.webp';
 import bannerLsImg from '../../../assets/banner-ls.webp';
 import bush1Img from '../../../assets/decorations/bush-1.png';
@@ -38,6 +39,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image('cone', coneImg);
     this.load.image('coin', coinImg);
     this.load.image('bg-far', bgFarImg);
+    this.load.image('flash-star', flashStarImg);
     this.load.image('banner-pr', bannerPrImg);
     this.load.image('banner-ls', bannerLsImg);
     this.load.image('bush-1', bush1Img);
