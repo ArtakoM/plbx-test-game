@@ -23,6 +23,8 @@ export class GameScene extends Phaser.Scene {
   private overlay?: Phaser.GameObjects.Graphics;
   private overlayTexts: Phaser.GameObjects.Text[] = [];
   private bgMusic?: Phaser.Sound.BaseSound;
+  private bushes: Phaser.GameObjects.Image[] = [];
+  private bushTimer = 0;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -48,6 +50,11 @@ export class GameScene extends Phaser.Scene {
 
     // Background
     this.background = new ParallaxBackground(this);
+
+    // Bushes (decorative, on top edge of road)
+    this.bushes = [];
+    this.bushTimer = 0;
+    this.spawnInitialBushes();
 
     // Player (bottom-anchored, placed at groundY)
     this.player = new Player(this, this.w * 0.15, this.groundY);
@@ -233,6 +240,7 @@ export class GameScene extends Phaser.Scene {
       this.obstacles.update(delta, this.gameSpeed);
       this.coins.update(delta, this.gameSpeed);
       this.finishLine.update(this.gameSpeed);
+      this.updateBushes(delta, this.gameSpeed);
 
       this.distanceTraveled += this.gameSpeed;
       this.gameSpeed = 4 + this.distanceTraveled * 0.0002;
@@ -249,6 +257,60 @@ export class GameScene extends Phaser.Scene {
     if (this.gameState === 'win' || this.gameState === 'lose') {
       this.player.update(time, delta);
       this.finishLine.update(0);
+    }
+  }
+
+  private spawnInitialBushes(): void {
+    // Scatter bushes across the screen at start
+    for (let x = 100; x < this.w; x += 200 + Math.random() * 250) {
+      this.spawnBush(x);
+    }
+  }
+
+  private spawnBush(x: number): void {
+    const items = ['bush-1', 'bush-2', 'bush-3', 'tree-1', 'tree-2', 'street-lamp'];
+    const key = items[Math.floor(Math.random() * items.length)];
+    const roadTopY = this.h * 0.64;
+    const isTree = key.startsWith('tree');
+    const isLamp = key === 'street-lamp';
+
+    let scale: number;
+    if (isTree) {
+      // Trees stretch from road top all the way to the top of the screen
+      const treeTex = this.textures.get(key).getSourceImage();
+      scale = roadTopY / treeTex.height;
+    } else if (isLamp) {
+      scale = (this.h * 0.20) / 200;
+    } else {
+      scale = (this.h * 0.08) / 200;
+    }
+
+    const tex = this.textures.get(key).getSourceImage();
+    const halfW = (tex.width * scale) / 2;
+    const spawnX = Math.max(x, this.w + halfW + 20);
+
+    const deco = this.add.image(spawnX, roadTopY, key)
+      .setOrigin(0.5, 1)
+      .setScale(scale)
+      .setDepth(-1);
+    this.bushes.push(deco);
+  }
+
+  private updateBushes(delta: number, speed: number): void {
+    // Scroll existing bushes
+    for (let i = this.bushes.length - 1; i >= 0; i--) {
+      this.bushes[i].x -= speed * 0.7;
+      if (this.bushes[i].x < -100) {
+        this.bushes[i].destroy();
+        this.bushes.splice(i, 1);
+      }
+    }
+
+    // Spawn new bushes
+    this.bushTimer += delta;
+    if (this.bushTimer >= 800 + Math.random() * 600) {
+      this.bushTimer = 0;
+      this.spawnBush(this.w + 80);
     }
   }
 }
