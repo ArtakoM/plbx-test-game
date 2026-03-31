@@ -27,7 +27,7 @@ export class CoinManager {
     this.scene.physics.add.overlap(player, this.group, (_p, coin) => {
       (coin as Phaser.Physics.Arcade.Sprite).destroy();
       this.score += 10;
-      this.scene.sound.play('coin-sfx', { volume: 0.4 });
+      this.scene.sound.play('coin-sfx', { volume: 0.3 });
       this.onScoreChange?.(this.score);
     }, undefined, this);
   }

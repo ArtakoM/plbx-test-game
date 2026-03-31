@@ -77,6 +77,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (body.blocked.down) {
       body.setVelocityY(this.jumpVelocity);
       this.setState('jumping');
+      this.scene.sound.play('jump-sfx', { volume: 0.8 });
     }
   }
 

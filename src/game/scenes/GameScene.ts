@@ -108,7 +108,7 @@ export class GameScene extends Phaser.Scene {
       this.gameState = 'running';
       this.player.setState('running');
       this.clearOverlay();
-      this.bgMusic = this.sound.add('bg-music', { loop: true, volume: 0.5 });
+      this.bgMusic = this.sound.add('bg-music', { loop: true, volume: 0.20 });
       this.bgMusic.play();
     } else if (this.gameState === 'running') {
       this.player.jump();
