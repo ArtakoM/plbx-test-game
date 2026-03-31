@@ -195,6 +195,7 @@ export class GameScene extends Phaser.Scene {
     if (this.player.isInvulnerable() || this.gameState !== 'running') return;
 
     const dead = this.player.takeDamage();
+    this.sound.play('damage-sfx', { volume: 0.5 });
     this.ui.updateHP(this.player.getHP());
 
     if (dead) {

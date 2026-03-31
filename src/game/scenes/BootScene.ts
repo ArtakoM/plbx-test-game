@@ -19,6 +19,7 @@ import coinSfx from '../../../audio/coin.mp3';
 import jumpSfx from '../../../audio/jump.mp3';
 import failSfx from '../../../audio/fail.mp3';
 import winSfx from '../../../audio/win.mp3';
+import damageSfx from '../../../audio/damage.mp3';
 
 const PLAYER_COLS = 8;
 const PLAYER_ROWS = 4;
@@ -53,6 +54,7 @@ export class BootScene extends Phaser.Scene {
     this.load.audio('jump-sfx', jumpSfx);
     this.load.audio('fail-sfx', failSfx);
     this.load.audio('win-sfx', winSfx);
+    this.load.audio('damage-sfx', damageSfx);
   }
 
   create(): void {
