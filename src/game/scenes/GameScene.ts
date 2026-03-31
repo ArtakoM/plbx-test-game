@@ -188,8 +188,6 @@ export class GameScene extends Phaser.Scene {
       this.bgMusic.play();
     } else if (this.gameState === 'running') {
       this.player.jump();
-    } else if (this.gameState === 'lose') {
-      this.scene.restart();
     }
   }
 
@@ -364,33 +362,145 @@ export class GameScene extends Phaser.Scene {
 
   private showLoseScreen(): void {
     this.clearOverlay();
+
+    // Pause physics
+    this.physics.pause();
+
+    // Semi-transparent overlay
     this.overlay = this.add.graphics().setScrollFactor(0).setDepth(200);
-    this.overlay.fillStyle(0x000000, 0.7);
+    this.overlay.fillStyle(0x000000, 0.6);
     this.overlay.fillRect(0, 0, this.w, this.h);
 
-    const fs = Math.min(this.w * 0.06, 48);
+    const cx = this.w / 2;
+    const s = Math.min(this.w, this.h);
+    const titleFs = s * 0.07;
+    const subFs = titleFs * 0.55;
+    const gap = s * 0.04;
 
-    const loseText = this.add.text(this.w / 2, this.h * 0.375, 'GAME OVER', {
+    // Coin + star size
+    const coinSize = s * 0.35;
+    const coinScale = coinSize / 581;
+    const starScale = coinScale * 5.1;
+
+    // Button dimensions
+    const btnW = s * 0.55;
+    const btnH = btnW * 0.22;
+
+    // Calculate total content height and center vertically
+    const totalH = titleFs + gap + subFs + gap + coinSize + gap + btnH;
+    let y = (this.h - totalH) / 2;
+
+    // "You didn't make it!"
+    const loseText = this.add.text(cx, y, "You didn't make it!", {
       fontFamily: 'Arial',
-      fontSize: `${fs}px`,
-      color: '#ff0000',
+      fontStyle: '900',
+      fontSize: `${titleFs}px`,
+      color: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 5,
+    }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(201);
+    y += loseText.height + gap;
+
+    // "Try again on the app!"
+    const tryAgainText = this.add.text(cx, y, 'Try again on the app!', {
+      fontFamily: 'Arial',
+      fontStyle: '700',
+      fontSize: `${subFs}px`,
+      color: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 3,
+    }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(201);
+    y += tryAgainText.height + gap;
+
+    // Flash star behind coin
+    const coinY = y + coinSize / 2;
+    const flashStar = this.add.image(cx, coinY, 'flash-star')
+      .setScale(starScale)
+      .setScrollFactor(0)
+      .setDepth(200.5);
+
+    this.tweens.add({
+      targets: flashStar,
+      angle: 360,
+      duration: 4000,
+      repeat: -1,
+      ease: 'Linear',
+    });
+
+    // Big coin with score inside
+    const bigCoin = this.add.image(cx, coinY, 'coin')
+      .setScale(coinScale)
+      .setScrollFactor(0)
+      .setDepth(201);
+
+    const scoreInCoin = this.add.text(cx, coinY, `${this.coins.getScore()}`, {
+      fontFamily: 'Arial',
+      fontStyle: '900',
+      fontSize: `${titleFs}px`,
+      color: '#ffffff',
       stroke: '#000000',
       strokeThickness: 4,
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(202);
+    y += coinSize + gap;
 
-    const scoreText = this.add.text(this.w / 2, this.h * 0.575, `Score: ${this.coins.getScore()}`, {
-      fontFamily: 'Arial',
-      fontSize: `${fs * 0.6}px`,
-      color: '#ffffff',
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
+    // "INSTALL AND EARN" button (red variant)
+    const btnY = y + btnH / 2;
+    const btnPadX = btnW * 0.06;
+    const btnPadY = btnH * 0.15;
+    const fullW = btnW + btnPadX * 2;
+    const fullH = btnH + btnPadY * 2;
+    const btnRadius = 8;
 
-    const retryText = this.add.text(this.w / 2, this.h * 0.775, 'Tap to Retry', {
-      fontFamily: 'Arial',
-      fontSize: `${fs * 0.5}px`,
-      color: '#ffff00',
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
+    const btnGfx = this.make.graphics({}).setDepth(0);
+    // Shadow
+    btnGfx.fillStyle(0x8b0000, 1);
+    btnGfx.fillRoundedRect(-fullW / 2, -fullH / 2 + 3, fullW, fullH, btnRadius);
+    // Main button
+    btnGfx.fillStyle(0xdd2222, 1);
+    btnGfx.fillRoundedRect(-fullW / 2, -fullH / 2, fullW, fullH, btnRadius);
+    // Highlight
+    btnGfx.fillStyle(0xff6666, 0.6);
+    btnGfx.fillRoundedRect(-fullW / 2 + 3, -fullH / 2 + 2, fullW - 6, fullH * 0.38, { tl: btnRadius, tr: btnRadius, bl: 0, br: 0 });
 
-    this.overlayObjects.push(loseText, scoreText, retryText);
+    const btnText = this.make.text({
+      x: 0, y: 0,
+      text: 'INSTALL AND EARN',
+      style: {
+        fontFamily: 'Arial',
+        fontStyle: '900',
+        fontSize: `${btnH * 0.4}px`,
+        color: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 3,
+      },
+    }).setOrigin(0.5).setDepth(1);
+
+    const btnContainer = this.add.container(cx, btnY, [btnGfx, btnText])
+      .setScrollFactor(0)
+      .setDepth(201);
+
+    // Pulse animation
+    this.tweens.add({
+      targets: btnContainer,
+      scaleX: 1.05,
+      scaleY: 1.05,
+      duration: 700,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+
+    // Button click
+    const hitZone = this.add.zone(cx, btnY, fullW, fullH)
+      .setScrollFactor(0)
+      .setDepth(203)
+      .setInteractive();
+    hitZone.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      pointer.event.stopPropagation();
+      window.open('https://example.com', '_blank');
+    });
+
+    this.overlayObjects.push(loseText, tryAgainText, flashStar, bigCoin, scoreInCoin, btnContainer, hitZone);
   }
 
   private clearOverlay(): void {
