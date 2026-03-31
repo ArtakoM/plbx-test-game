@@ -215,7 +215,35 @@ export class GameScene extends Phaser.Scene {
     this.player.setState('idle');
     this.bgMusic?.stop();
     this.sound.play('win-sfx', { volume: 0.6 });
+    this.spawnConfetti();
     this.showEndScreen('Congratulations!', 'Choose your reward!', ORANGE_BTN);
+  }
+
+  private spawnConfetti(): void {
+    const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff, 0xff8800, 0xff69b4];
+    const count = 80;
+
+    for (let i = 0; i < count; i++) {
+      const x = Math.random() * this.w;
+      const size = 4 + Math.random() * 8;
+      const color = colors[Math.floor(Math.random() * colors.length)];
+
+      const piece = this.add.rectangle(x, -10 - Math.random() * 200, size, size * (0.5 + Math.random()), color)
+        .setDepth(250)
+        .setScrollFactor(0)
+        .setAngle(Math.random() * 360);
+
+      this.tweens.add({
+        targets: piece,
+        y: this.h + 50,
+        x: x + (Math.random() - 0.5) * 200,
+        angle: piece.angle + (Math.random() - 0.5) * 720,
+        duration: 2000 + Math.random() * 2000,
+        ease: 'Quad.easeIn',
+        delay: Math.random() * 500,
+        onComplete: () => piece.destroy(),
+      });
+    }
   }
 
   private handleLose(): void {
