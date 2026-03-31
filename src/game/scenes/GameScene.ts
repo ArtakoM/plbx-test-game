@@ -314,13 +314,16 @@ export class GameScene extends Phaser.Scene {
     if (this.gameState === 'idle') return;
 
     if (this.gameState === 'running') {
-      this.player.update(time, delta);
-      this.obstacles.update(delta, this.gameSpeed);
-      this.coins.update(delta, this.gameSpeed);
-      this.finishLine.update(this.gameSpeed);
-      this.updateBushes(delta, this.gameSpeed);
+      const dt = delta / 16.67;
+      const speed = this.gameSpeed * dt;
 
-      this.distanceTraveled += this.gameSpeed;
+      this.player.update(time, delta);
+      this.obstacles.update(delta, speed);
+      this.coins.update(delta, speed);
+      this.finishLine.update(speed);
+      this.updateBushes(delta, speed);
+
+      this.distanceTraveled += speed;
       this.gameSpeed = 4 + this.distanceTraveled * 0.0002;
 
       if (!this.spawningDone && this.distanceTraveled >= this.FINISH_DISTANCE - this.w * 2) {
