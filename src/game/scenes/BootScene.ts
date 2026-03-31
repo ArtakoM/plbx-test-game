@@ -6,6 +6,7 @@ import coneImg from '../../../assets/cone.webp';
 import coinImg from '../../../assets/coin.webp';
 import bgFarImg from '../../../assets/runner-background.webp';
 import bgMusic from '../../../audio/background.mp3';
+import coinSfx from '../../../audio/coin.mp3';
 
 const PLAYER_COLS = 4;
 const PLAYER_ROWS = 4;
@@ -27,6 +28,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image('coin', coinImg);
     this.load.image('bg-far', bgFarImg);
     this.load.audio('bg-music', bgMusic);
+    this.load.audio('coin-sfx', coinSfx);
   }
 
   create(): void {
