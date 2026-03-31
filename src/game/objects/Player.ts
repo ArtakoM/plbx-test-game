@@ -42,7 +42,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       anims.create({
         key: 'player-idle',
         frames: anims.generateFrameNumbers('player', { start: 0, end: 3 }),
-        frameRate: 6,
+        frameRate: 4,
         repeat: -1,
       });
     }

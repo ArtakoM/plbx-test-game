@@ -25,6 +25,7 @@ export class GameScene extends Phaser.Scene {
   private bgMusic?: Phaser.Sound.BaseSound;
   private bushes: Phaser.GameObjects.Image[] = [];
   private bushTimer = 0;
+  private banner!: Phaser.GameObjects.Image;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -62,6 +63,81 @@ export class GameScene extends Phaser.Scene {
 
     // UI
     this.ui = new UIManager(this);
+
+    // Banner at bottom - pick based on orientation
+    const isPortrait = this.h > this.w;
+    const bannerKey = isPortrait ? 'banner-pr' : 'banner-ls';
+    this.banner = this.add.image(this.w / 2, this.h, bannerKey)
+      .setOrigin(0.5, 1)
+      .setScrollFactor(0)
+      .setDepth(150);
+    // Scale banner to fill screen width
+    const bannerTex = this.textures.get(bannerKey).getSourceImage();
+    const bannerScale = this.w / bannerTex.width;
+    this.banner.setScale(bannerScale);
+    const bannerH = bannerTex.height * bannerScale;
+
+    // Download button on right side of banner
+    const btnW = bannerH * 1.4;
+    const btnH = bannerH * 0.5;
+    const btnX = this.w - btnW / 2 - this.w * 0.08;
+    const btnY = this.h - bannerH / 2;
+    const btnPadX = btnW * 0.08;
+    const btnPadY = btnH * 0.12;
+    const fullW = btnW + btnPadX * 2;
+    const fullH = btnH + btnPadY * 2;
+    const btnRadius = 8;
+
+    // Draw button graphics relative to (0,0) — container position handles placement
+    const btnGfx = this.make.graphics({}).setDepth(0);
+    // Shadow
+    btnGfx.fillStyle(0xc45500, 1);
+    btnGfx.fillRoundedRect(-fullW / 2, -fullH / 2 + 3, fullW, fullH, btnRadius);
+    // Main button
+    btnGfx.fillStyle(0xff8c00, 1);
+    btnGfx.fillRoundedRect(-fullW / 2, -fullH / 2, fullW, fullH, btnRadius);
+    // Highlight
+    btnGfx.fillStyle(0xffb347, 0.6);
+    btnGfx.fillRoundedRect(-fullW / 2 + 3, -fullH / 2 + 2, fullW - 6, fullH * 0.38, { tl: btnRadius, tr: btnRadius, bl: 0, br: 0 });
+
+    const btnText = this.make.text({
+      x: 0, y: 0,
+      text: 'DOWNLOAD',
+      style: {
+        fontFamily: 'Arial',
+        fontStyle: '900',
+        fontSize: `${btnH * 0.3}px`,
+        color: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 3,
+      },
+    }).setOrigin(0.5).setDepth(1);
+
+    // Container at button center — scaling happens from center
+    const btnContainer = this.add.container(btnX, btnY, [btnGfx, btnText])
+      .setScrollFactor(0)
+      .setDepth(151);
+
+    // Smooth continuous pulse
+    this.tweens.add({
+      targets: btnContainer,
+      scaleX: 1.05,
+      scaleY: 1.05,
+      duration: 700,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+
+    // Make button interactive
+    const hitZone = this.add.zone(btnX, btnY, fullW, fullH)
+      .setScrollFactor(0)
+      .setDepth(153)
+      .setInteractive();
+    hitZone.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      pointer.event.stopPropagation();
+      window.open('https://example.com', '_blank');
+    });
 
     // Obstacles
     this.obstacles = new ObstacleManager(this, this.groundY);
