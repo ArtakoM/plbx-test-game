@@ -14,6 +14,7 @@ export class CoinManager {
   private score = 0;
   private groundY: number;
   private stopped = false;
+  private lastSpawnX = -Infinity;
   private onScoreChange?: (score: number) => void;
 
   constructor(scene: Phaser.Scene, groundY: number) {
@@ -37,7 +38,12 @@ export class CoinManager {
   /** Spawn a triangle arc of coins at the given x position */
   spawnArcAt(x: number): void {
     if (this.stopped) return;
-    // Push standalone timer back so next free arc won't overlap
+    // Skip if too close to the last arc
+    const spacing = this.scene.scale.height * 0.12;
+    const arcWidth = spacing * 5;
+    if (Math.abs(x - this.lastSpawnX) < arcWidth * 1.5) return;
+    this.lastSpawnX = x;
+    // Push standalone timer back
     this.spawnTimer = -2000;
     const h = this.scene.scale.height;
     const coinScale = (h * 0.06) / COIN_FRAME_SIZE;
@@ -64,6 +70,9 @@ export class CoinManager {
         this.spawnArcAt(this.scene.scale.width + 50);
       }
     }
+
+    // Scroll coins and track last spawn position
+    this.lastSpawnX -= speed;
 
     this.group.getChildren().forEach((obj) => {
       const s = obj as Phaser.Physics.Arcade.Sprite;

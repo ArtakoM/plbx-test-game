@@ -525,7 +525,7 @@ export class GameScene extends Phaser.Scene {
       this.gameSpeed = 4 + this.distanceTraveled * 0.0002;
 
       // Stop spawning just before finish line enters the screen
-      if (!this.spawningDone && this.distanceTraveled >= this.FINISH_DISTANCE - this.w - 200) {
+      if (!this.spawningDone && this.distanceTraveled >= this.FINISH_DISTANCE - this.w * 2) {
         this.spawningDone = true;
         this.obstacles.stop();
         this.coins.stop();
