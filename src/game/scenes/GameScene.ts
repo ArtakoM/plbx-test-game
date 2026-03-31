@@ -22,6 +22,7 @@ export class GameScene extends Phaser.Scene {
   private spawningDone = false;
   private overlay?: Phaser.GameObjects.Graphics;
   private overlayTexts: Phaser.GameObjects.Text[] = [];
+  private bgMusic?: Phaser.Sound.BaseSound;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -107,6 +108,8 @@ export class GameScene extends Phaser.Scene {
       this.gameState = 'running';
       this.player.setState('running');
       this.clearOverlay();
+      this.bgMusic = this.sound.add('bg-music', { loop: true, volume: 0.5 });
+      this.bgMusic.play();
     } else if (this.gameState === 'running') {
       this.player.jump();
     } else if (this.gameState === 'lose' || this.gameState === 'win') {
@@ -129,11 +132,13 @@ export class GameScene extends Phaser.Scene {
     this.gameState = 'win';
     this.obstacles.stop();
     this.coins.stop();
+    this.bgMusic?.stop();
     this.showWinScreen();
   }
 
   private handleLose(): void {
     this.gameState = 'lose';
+    this.bgMusic?.stop();
     this.showLoseScreen();
   }
 
