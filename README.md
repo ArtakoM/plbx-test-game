@@ -61,7 +61,7 @@ npm run preview
 
 ## Assets
 
-All game assets (sprites, backgrounds, decorations) were generated with [Nano Banana](https://nanobanana.com).
+All game assets (sprites, backgrounds, decorations) were generated with Nano Banana
 
 ## Project Structure
 
