@@ -8,6 +8,7 @@ import bgFarImg from '../../../assets/runner-background.webp';
 import bgMusic from '../../../audio/background.mp3';
 import coinSfx from '../../../audio/coin.mp3';
 import jumpSfx from '../../../audio/jump.mp3';
+import failSfx from '../../../audio/fail.mp3';
 
 const PLAYER_COLS = 4;
 const PLAYER_ROWS = 4;
@@ -31,6 +32,7 @@ export class BootScene extends Phaser.Scene {
     this.load.audio('bg-music', bgMusic);
     this.load.audio('coin-sfx', coinSfx);
     this.load.audio('jump-sfx', jumpSfx);
+    this.load.audio('fail-sfx', failSfx);
   }
 
   create(): void {

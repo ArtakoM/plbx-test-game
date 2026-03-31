@@ -118,7 +118,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handlePlayerHit(): void {
-    if (this.player.isInvulnerable()) return;
+    if (this.player.isInvulnerable() || this.gameState !== 'running') return;
 
     const dead = this.player.takeDamage();
     this.ui.updateHP(this.player.getHP());
@@ -139,6 +139,7 @@ export class GameScene extends Phaser.Scene {
   private handleLose(): void {
     this.gameState = 'lose';
     this.bgMusic?.stop();
+    this.sound.play('fail-sfx', { volume: 0.6 });
     this.showLoseScreen();
   }
 
