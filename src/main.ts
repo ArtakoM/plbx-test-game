@@ -15,6 +15,12 @@ const config: Phaser.Types.Core.GameConfig = {
       debug: false,
     },
   },
+  input: {
+    activePointers: 1,
+    touch: {
+      capture: true,
+    },
+  },
   scale: {
     mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH,
