@@ -89,25 +89,18 @@ export class GameScene extends Phaser.Scene {
 
   private showStartScreen(): void {
     this.clearOverlay();
-    this.overlay = this.add.graphics().setScrollFactor(0).setDepth(200);
-    this.overlay.fillStyle(0x000000, 0.5);
-    this.overlay.fillRect(0, 0, this.w, this.h);
 
-    const title = this.add.text(this.w / 2, this.h * 0.375, 'RUNNER', {
+    const text = this.add.text(this.w / 2, this.h / 2, 'Tap to start\nearning!', {
       fontFamily: 'Arial',
-      fontSize: `${Math.min(this.w * 0.06, 48)}px`,
+      fontStyle: '600',
+      fontSize: `${Math.min(this.w * 0.08, 64)}px`,
       color: '#ffffff',
       stroke: '#000000',
-      strokeThickness: 4,
+      strokeThickness: 5,
+      align: 'center',
     }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
 
-    const tapText = this.add.text(this.w / 2, this.h * 0.625, 'Tap to Start', {
-      fontFamily: 'Arial',
-      fontSize: `${Math.min(this.w * 0.03, 24)}px`,
-      color: '#ffff00',
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
-
-    this.overlayTexts.push(title, tapText);
+    this.overlayTexts.push(text);
   }
 
   private handleInput(): void {

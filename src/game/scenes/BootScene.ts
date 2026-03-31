@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 
-import playerImg from '../../../assets/player.png';
+import playerImg from '../../../assets/player-new.png';
 import enemyImg from '../../../assets/enemy.webp';
 import coneImg from '../../../assets/cone.webp';
 import coinImg from '../../../assets/coin.webp';
@@ -17,9 +17,9 @@ import jumpSfx from '../../../audio/jump.mp3';
 import failSfx from '../../../audio/fail.mp3';
 import winSfx from '../../../audio/win.mp3';
 
-const PLAYER_COLS = 4;
+const PLAYER_COLS = 8;
 const PLAYER_ROWS = 4;
-const PLAYER_FW = 187;
+const PLAYER_FW = 176;
 const PLAYER_FH = 192;
 
 export class BootScene extends Phaser.Scene {

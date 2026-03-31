@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 
 type PlayerState = 'idle' | 'running' | 'jumping' | 'damaged';
 
-// Frame sheet: 187x192 per frame, 4 cols x 4 rows
+// Frame sheet: 176x192 per frame, 8 cols x 4 rows
 const FRAME_H = 192;
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
@@ -29,7 +29,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     // Body: character ~80px wide, ~160px tall, centered, feet at frame bottom
     const body = this.body as Phaser.Physics.Arcade.Body;
     body.setSize(80, 160);
-    body.setOffset(54, 32); // x: (187-80)/2≈54, y: 192-160=32 → bottom flush
+    body.setOffset(48, 32); // x: (176-80)/2=48, y: 192-160=32 → bottom flush
 
     this.createAnimations();
     this.play('player-idle');
@@ -49,23 +49,23 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (!anims.exists('player-run')) {
       anims.create({
         key: 'player-run',
-        frames: anims.generateFrameNumbers('player', { start: 4, end: 7 }),
-        frameRate: 10,
+        frames: anims.generateFrameNumbers('player', { start: 8, end: 15 }),
+        frameRate: 12,
         repeat: -1,
       });
     }
     if (!anims.exists('player-jump')) {
       anims.create({
         key: 'player-jump',
-        frames: anims.generateFrameNumbers('player', { start: 8, end: 11 }),
-        frameRate: 8,
+        frames: anims.generateFrameNumbers('player', { start: 16, end: 23 }),
+        frameRate: 10,
         repeat: 0,
       });
     }
     if (!anims.exists('player-hit')) {
       anims.create({
         key: 'player-hit',
-        frames: anims.generateFrameNumbers('player', { start: 12, end: 15 }),
+        frames: anims.generateFrameNumbers('player', { start: 24, end: 27 }),
         frameRate: 8,
         repeat: 0,
       });
