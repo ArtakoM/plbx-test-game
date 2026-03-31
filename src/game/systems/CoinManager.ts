@@ -16,6 +16,7 @@ export class CoinManager {
   private stopped = false;
   private lastSpawnX = -Infinity;
   private onScoreChange?: (score: number) => void;
+  private static readonly PHRASES = ['Nice!', 'Awesome!', 'You are a pro!', 'Perfect!', 'Fantastic!'];
 
   constructor(scene: Phaser.Scene, groundY: number) {
     this.scene = scene;
@@ -26,10 +27,18 @@ export class CoinManager {
   setupOverlap(player: Player, onScoreChange: (score: number) => void): void {
     this.onScoreChange = onScoreChange;
     this.scene.physics.add.overlap(player, this.group, (_p, coin) => {
-      (coin as Phaser.Physics.Arcade.Sprite).destroy();
+      const c = coin as Phaser.Physics.Arcade.Sprite;
+      const cx = c.x;
+      const cy = c.y;
+      c.destroy();
       this.score += 10;
       this.scene.sound.play('coin-sfx', { volume: 0.3 });
       this.onScoreChange?.(this.score);
+
+      // 45% chance to show a compliment
+      if (Math.random() < 0.45) {
+        this.showPhrase(cx, cy);
+      }
     }, undefined, this);
   }
 
@@ -47,7 +56,6 @@ export class CoinManager {
     this.spawnTimer = -2000;
     const h = this.scene.scale.height;
     const coinScale = (h * 0.06) / COIN_FRAME_SIZE;
-    const spacing = this.scene.scale.height * 0.12;
 
     for (let i = 0; i < 5; i++) {
       const cx = x + i * spacing;
@@ -78,6 +86,30 @@ export class CoinManager {
       const s = obj as Phaser.Physics.Arcade.Sprite;
       s.x -= speed;
       if (s.x < -50) s.destroy();
+    });
+  }
+
+  private showPhrase(x: number, y: number): void {
+    const phrase = CoinManager.PHRASES[Math.floor(Math.random() * CoinManager.PHRASES.length)];
+    const h = this.scene.scale.height;
+    const fs = Math.min(h * 0.05, 28);
+
+    const text = this.scene.add.text(x, y - 20, phrase, {
+      fontFamily: 'Arial',
+      fontStyle: '900',
+      fontSize: `${fs}px`,
+      color: '#ffdd00',
+      stroke: '#000000',
+      strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(150);
+
+    this.scene.tweens.add({
+      targets: text,
+      y: y - 80,
+      alpha: 0,
+      duration: 800,
+      ease: 'Quad.easeOut',
+      onComplete: () => text.destroy(),
     });
   }
 

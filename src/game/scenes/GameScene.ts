@@ -206,6 +206,7 @@ export class GameScene extends Phaser.Scene {
     this.gameState = 'win';
     this.obstacles.stop();
     this.coins.stop();
+    this.player.setState('idle');
     this.bgMusic?.stop();
     this.sound.play('win-sfx', { volume: 0.6 });
     this.showWinScreen();
