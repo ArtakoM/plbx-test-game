@@ -10,7 +10,7 @@ export class ObstacleManager {
   private staticGroup: Phaser.Physics.Arcade.Group;
   private dynamicGroup: Phaser.Physics.Arcade.Group;
   private spawnTimer = 0;
-  private spawnInterval = 1500;
+  private spawnInterval = 800;
   private stopped = false;
   private coneCount = 0;
   private enemyCount = 0;
@@ -80,7 +80,8 @@ export class ObstacleManager {
     } else if (this.enemyCount < 3 && this.coneCount >= 3) {
       spawnCone = false;
     } else if (this.coneCount < 3 && this.enemyCount < 3) {
-      spawnCone = Math.random() < 0.5;
+      // Alternate: first cone, then enemy, etc.
+      spawnCone = this.coneCount <= this.enemyCount;
     } else {
       spawnCone = Math.random() < 0.6;
     }
