@@ -59,7 +59,9 @@ export class GameScene extends Phaser.Scene {
     this.bushTimer = 0;
     this.spawnInitialBushes();
 
-    this.player = new Player(this, this.w * 0.15, this.groundY);
+    const isPortrait = this.h > this.w;
+    const playerX = isPortrait ? this.w * 0.15 : this.w * 0.3;
+    this.player = new Player(this, playerX, this.groundY);
     this.physics.add.collider(this.player, groundRect);
 
     this.ui = new UIManager(this);
