@@ -2,8 +2,8 @@ import Phaser from 'phaser';
 
 type PlayerState = 'idle' | 'running' | 'jumping' | 'damaged';
 
-// Frame sheet: 176x192 per frame, 8 cols x 4 rows
-const FRAME_H = 192;
+// Frame sheet: 172x188 per frame, 8 cols x 4 rows
+const FRAME_H = 188;
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   private currentState: PlayerState = 'idle';
@@ -26,10 +26,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     this.jumpVelocity = -(h * 1.05);
 
-    // Body: character ~80px wide, ~160px tall, centered, feet at frame bottom
+    // Body: character ~80px wide, ~158px tall, centered, feet at frame bottom
     const body = this.body as Phaser.Physics.Arcade.Body;
-    body.setSize(80, 160);
-    body.setOffset(48, 32); // x: (176-80)/2=48, y: 192-160=32 → bottom flush
+    body.setSize(80, 158);
+    body.setOffset(46, 30); // x: (172-80)/2=46, y: 188-158=30 → bottom flush
 
     this.createAnimations();
     this.play('player-idle');

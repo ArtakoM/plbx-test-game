@@ -23,8 +23,8 @@ import damageSfx from '../../../audio/damage.mp3';
 
 const PLAYER_COLS = 8;
 const PLAYER_ROWS = 4;
-const PLAYER_FW = 176;
-const PLAYER_FH = 192;
+const PLAYER_FW = 172;
+const PLAYER_FH = 188;
 
 export class BootScene extends Phaser.Scene {
   constructor() {
