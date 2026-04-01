@@ -57,7 +57,10 @@ export class UIManager {
 
   updateScore(score: number): void {
     this.scoreText.setText(`${score}`);
-    // Reposition icon to stay left of the score text
     this.coinIcon.x = this.scoreText.x - this.scoreText.width - 2;
+  }
+
+  getCoinIconPosition(): { x: number; y: number } {
+    return { x: this.coinIcon.x, y: this.coinIcon.y };
   }
 }

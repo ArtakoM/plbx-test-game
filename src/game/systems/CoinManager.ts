@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { Player } from '../objects/Player';
+import { UIManager } from './UIManager';
 
 const COIN_FRAME_SIZE = 581;
 
@@ -16,6 +17,7 @@ export class CoinManager {
   private stopped = false;
   private lastSpawnX = -Infinity;
   private onScoreChange?: (score: number) => void;
+  private ui?: UIManager;
   private static readonly PHRASES = ['Nice!', 'Awesome!', 'You are a pro!', 'Perfect!', 'Fantastic!'];
 
   constructor(scene: Phaser.Scene, groundY: number) {
@@ -30,12 +32,38 @@ export class CoinManager {
       const c = coin as Phaser.Physics.Arcade.Sprite;
       const cx = c.x;
       const cy = c.y;
-      c.destroy();
+      const coinScale = c.scaleX;
+
+      // Remove from physics group but keep sprite visible for animation
+      this.group.remove(c, false, false);
+      if (c.body) (c.body as Phaser.Physics.Arcade.Body).enable = false;
+      c.setScrollFactor(0);
+      c.setDepth(150);
+
       this.score += 10;
       this.scene.sound.play('coin-sfx', { volume: 0.3 });
       this.onScoreChange?.(this.score);
 
-      // 45% chance to show a compliment
+      // Fly coin to score icon
+      const target = this.ui?.getCoinIconPosition() ?? { x: this.scene.scale.width - 50, y: 30 };
+      this.scene.tweens.add({
+        targets: c,
+        x: target.x,
+        y: target.y,
+        scaleX: coinScale * 0.3,
+        scaleY: coinScale * 0.3,
+        duration: 500,
+        ease: 'Quad.easeIn',
+      });
+      // Fade out with delay
+      this.scene.tweens.add({
+        targets: c,
+        alpha: 0,
+        delay: 300,
+        duration: 200,
+        onComplete: () => c.destroy(),
+      });
+
       if (Math.random() < 0.45) {
         this.showPhrase(cx, cy);
       }
@@ -43,6 +71,8 @@ export class CoinManager {
   }
 
   stop(): void { this.stopped = true; }
+
+  setUI(ui: UIManager): void { this.ui = ui; }
 
   /** Spawn a triangle arc of coins at the given x position */
   spawnArcAt(x: number): void {

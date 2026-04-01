@@ -71,6 +71,7 @@ export class GameScene extends Phaser.Scene {
     this.obstacles.setupCollision(this.player, () => this.handlePlayerHit());
 
     this.coins = new CoinManager(this, this.groundY);
+    this.coins.setUI(this.ui);
     this.coins.setupOverlap(this.player, (score) => this.ui.updateScore(score));
     this.obstacles.setCoinManager(this.coins);
 
