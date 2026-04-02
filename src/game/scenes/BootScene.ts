@@ -4,7 +4,7 @@ import playerImg from '../../../assets/player.png';
 import enemyImg from '../../../assets/enemy.webp';
 import coneImg from '../../../assets/cone.webp';
 import coinImg from '../../../assets/coin.webp';
-import bgFarImg from '../../../assets/runner-background.webp';
+import bgFarImg from '../../../assets/runner-background.png';
 import flashStarImg from '../../../assets/flash-star.webp';
 import bannerPrImg from '../../../assets/banner-pr.webp';
 import bannerLsImg from '../../../assets/banner-ls.webp';
