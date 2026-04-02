@@ -2,7 +2,6 @@ import Phaser from 'phaser';
 
 type PlayerState = 'idle' | 'running' | 'jumping' | 'damaged';
 
-// Frame sheet: 172x188 per frame, 8 cols x 4 rows
 const FRAME_H = 188;
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
@@ -26,10 +25,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     this.jumpVelocity = -(h * 1.05);
 
-    // Body: character ~80px wide, ~158px tall, centered, feet at frame bottom
     const body = this.body as Phaser.Physics.Arcade.Body;
     body.setSize(80, 158);
-    body.setOffset(46, 30); // x: (172-80)/2=46, y: 188-158=30 → bottom flush
+    body.setOffset(46, 30);
 
     this.createAnimations();
     this.play('player-idle');
@@ -102,6 +100,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   getHP(): number { return this.hp; }
   isInvulnerable(): boolean { return this.invulnerable; }
 
+  updateJumpVelocity(h: number): void {
+    this.jumpVelocity = -(h * 1.05);
+  }
+
   setState(state: PlayerState): this {
     this.currentState = state;
     switch (state) {
@@ -114,26 +116,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   getState(): PlayerState { return this.currentState; }
-
-  handleResize(groundY: number, oldGroundY: number, h: number, newX: number): void {
-    this.setScale((h * 0.20) / FRAME_H);
-    this.jumpVelocity = -(h * 1.05);
-
-    const body = this.body as Phaser.Physics.Arcade.Body;
-
-    if (this.currentState === 'jumping') {
-      const aboveGround = oldGroundY - this.y;
-      this.x = newX;
-      this.y = groundY - aboveGround * (groundY / oldGroundY);
-      if (this.y > groundY) this.y = groundY;
-      // Scale velocity proportionally
-      body.velocity.y *= h / (oldGroundY / 0.80);
-    } else {
-      body.stop();
-      this.setPosition(newX, groundY);
-      body.updateFromGameObject();
-    }
-  }
 
   update(_time: number, delta: number): void {
     if (this.invulnerable) {

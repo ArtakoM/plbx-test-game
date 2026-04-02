@@ -29,16 +29,12 @@ export class GameScene extends Phaser.Scene {
   private distanceTraveled = 0;
   private readonly FINISH_DISTANCE = 5000;
   private spawningDone = false;
-  private overlay?: Phaser.GameObjects.Graphics;
   private overlayObjects: Phaser.GameObjects.GameObject[] = [];
   private bgMusic?: Phaser.Sound.BaseSound;
   private bushes: Phaser.GameObjects.Image[] = [];
   private bushTimer = 0;
-  private groundRect!: Phaser.GameObjects.Rectangle;
   private bannerObjects: Phaser.GameObjects.GameObject[] = [];
   private lastEndScreenArgs?: { title: string; subtitle: string; colors: ButtonColors };
-  private prevW = 0;
-  private prevH = 0;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -46,7 +42,8 @@ export class GameScene extends Phaser.Scene {
 
   private get w(): number { return this.scale.width; }
   private get h(): number { return this.scale.height; }
-  private get groundY(): number { return this.h * 0.80; }
+  private prevW = 0;
+  private prevH = 0;
 
   create(): void {
     this.sound.stopAll();
@@ -57,13 +54,14 @@ export class GameScene extends Phaser.Scene {
     this.spawningDone = false;
     this.bannerObjects = [];
     this.lastEndScreenArgs = undefined;
+
     this.prevW = this.w;
     this.prevH = this.h;
 
     this.physics.world.gravity.y = this.h * 2;
 
-    this.groundRect = this.add.rectangle(this.w / 2, this.groundY + 50, this.w * 2, 100, 0x000000, 0);
-    this.physics.add.existing(this.groundRect, true);
+    const groundRect = this.add.rectangle(this.w / 2, this.h * 0.80 + 50, this.w * 4, 100, 0x000000, 0);
+    this.physics.add.existing(groundRect, true);
 
     this.background = new ParallaxBackground(this);
 
@@ -71,96 +69,92 @@ export class GameScene extends Phaser.Scene {
     this.bushTimer = 0;
     this.spawnInitialBushes();
 
-    this.player = new Player(this, this.w * 0.2, this.groundY);
-    this.physics.add.collider(this.player, this.groundRect);
+    this.player = new Player(this, this.w * 0.2, this.h * 0.80);
+    this.physics.add.collider(this.player, groundRect);
 
     this.ui = new UIManager(this);
     this.createBanner();
 
-    this.obstacles = new ObstacleManager(this, this.groundY);
+    this.obstacles = new ObstacleManager(this, this.h * 0.80);
     this.obstacles.setupCollision(this.player, () => this.handlePlayerHit());
 
-    this.coins = new CoinManager(this, this.groundY);
+    this.coins = new CoinManager(this, this.h * 0.80);
     this.coins.setUI(this.ui);
     this.coins.setupOverlap(this.player, (score) => this.ui.updateScore(score));
     this.obstacles.setCoinManager(this.coins);
 
-    this.finishLine = new FinishLine(this, this.FINISH_DISTANCE, this.groundY);
+    this.finishLine = new FinishLine(this, this.FINISH_DISTANCE, this.h * 0.80);
     this.finishLine.setupOverlap(this.player, () => this.handleWin());
 
     this.showStartScreen();
 
     this.input.on('pointerdown', () => this.handleInput());
     this.input.keyboard?.on('keydown-SPACE', () => this.handleInput());
-    // Phaser resize event
-    this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
-      this.handleResize(gameSize.width, gameSize.height);
-    });
 
-    // Native orientation change — mobile browsers need extra time to settle
-    const onOrientationChange = () => {
-      // Retry at multiple intervals to catch the final settled dimensions
-      [100, 300, 500].forEach((delay) => {
-        this.time.delayedCall(delay, () => {
-          this.handleResize(this.w, this.h);
-        });
-      });
-    };
-
-    if (screen.orientation) {
-      screen.orientation.addEventListener('change', onOrientationChange);
-      this.events.on('destroy', () => {
-        screen.orientation.removeEventListener('change', onOrientationChange);
-      });
-    }
-    window.addEventListener('orientationchange', onOrientationChange);
-    this.events.on('destroy', () => {
-      window.removeEventListener('orientationchange', onOrientationChange);
-    });
+    // Lightweight resize: only UI, background, banner, and overlays adapt
+    // World objects (player, obstacles, coins, bushes, finish line) stay untouched
+    this.scale.on('resize', () => this.handleResize());
   }
 
-  private handleResize(newW: number, newH: number): void {
+  private handleResize(): void {
     const oldW = this.prevW;
     const oldH = this.prevH;
-    if (oldW === newW && oldH === newH) return;
-    this.prevW = newW;
-    this.prevH = newH;
+    if (oldW === this.w && oldH === this.h) return;
+    this.prevW = this.w;
+    this.prevH = this.h;
 
-    // World bounds + gravity + ground
-    this.physics.world.setBounds(0, 0, this.w, this.h);
+    const sx = this.w / oldW;
+    const sy = this.h / oldH;
+
+    // Scale ALL world objects proportionally
+    this.children.list.forEach((child) => {
+      const go = child as unknown as {
+        scrollFactorX?: number;
+        scrollFactorY?: number;
+        x: number;
+        y: number;
+        scaleX?: number;
+        scaleY?: number;
+      };
+      // Skip UI elements (scrollFactor 0)
+      if (go.scrollFactorX === 0 && go.scrollFactorY === 0) return;
+
+      // Scale uniformly by height ratio so proportions stay correct
+      go.x *= sy;
+      go.y *= sy;
+      if (go.scaleX !== undefined && go.scaleY !== undefined) {
+        go.scaleX *= sy;
+        go.scaleY *= sy;
+      }
+    });
+
+    // Update physics
     this.physics.world.gravity.y = this.h * 2;
-    this.groundRect.setPosition(this.w / 2, this.groundY + 50);
-    this.groundRect.setSize(this.w * 2, 100);
-    (this.groundRect.body as Phaser.Physics.Arcade.StaticBody).updateFromGameObject();
 
-    // Scale game speed proportionally
-    this.gameSpeed *= this.w / oldW;
+    // Sync static bodies
+    this.physics.world.staticBodies.entries.forEach((body: Phaser.Physics.Arcade.StaticBody) => {
+      body.updateFromGameObject();
+    });
+
+    // Player: scale velocity and update jump params
+    const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
+    playerBody.velocity.y *= sy;
+    this.player.updateJumpVelocity(this.h);
+
+    // Update ground level for future spawns
+    this.obstacles.setGroundY(this.h * 0.80);
+    this.coins.setGroundY(this.h * 0.80);
 
     // Background
     this.background.handleResize();
 
-    // Player
-    const oldGroundY = oldH * 0.80;
-    const newPlayerX = this.player.x * (this.w / oldW);
-    this.player.handleResize(this.groundY, oldGroundY, this.h, newPlayerX);
-
-    // Obstacles + coins + finish line
-    this.obstacles.handleResize(this.groundY, oldW);
-    this.coins.handleResize(this.groundY, oldW, oldH);
-    this.finishLine.handleResize(this.groundY, oldW);
-
     // UI
     this.ui.handleResize();
-
-    // Decorations
-    this.bushes.forEach((b) => b.destroy());
-    this.bushes = [];
-    this.spawnInitialBushes();
 
     // Banner
     this.createBanner();
 
-    // Active overlay
+    // Overlay
     if (this.gameState === 'idle') {
       this.showStartScreen();
     } else if (this.lastEndScreenArgs) {
@@ -347,9 +341,9 @@ export class GameScene extends Phaser.Scene {
     this.clearOverlay();
     this.physics.pause();
 
-    this.overlay = this.add.graphics().setScrollFactor(0).setDepth(200);
-    this.overlay.fillStyle(0x000000, 0.6);
-    this.overlay.fillRect(0, 0, this.w, this.h);
+    const overlay = this.add.graphics().setScrollFactor(0).setDepth(200);
+    overlay.fillStyle(0x000000, 0.6);
+    overlay.fillRect(0, 0, this.w, this.h);
 
     const cx = this.w / 2;
     const s = Math.min(this.w, this.h);
@@ -420,12 +414,10 @@ export class GameScene extends Phaser.Scene {
       window.open('https://example.com', '_blank');
     });
 
-    this.overlayObjects.push(titleText, subText, flashStar, bigCoin, scoreInCoin, btnContainer);
+    this.overlayObjects.push(overlay, titleText, subText, flashStar, bigCoin, scoreInCoin, btnContainer);
   }
 
   private clearOverlay(): void {
-    this.overlay?.destroy();
-    this.overlay = undefined;
     this.overlayObjects.forEach((obj) => obj.destroy());
     this.overlayObjects = [];
   }
@@ -438,6 +430,7 @@ export class GameScene extends Phaser.Scene {
       const speed = this.gameSpeed * dt;
 
       this.player.update(time, delta);
+      this.background.update(speed);
       this.obstacles.update(delta, speed);
       this.coins.update(delta, speed);
       this.finishLine.update(speed);
@@ -461,11 +454,11 @@ export class GameScene extends Phaser.Scene {
 
   private spawnInitialBushes(): void {
     for (let x = 100; x < this.w; x += 200 + Math.random() * 250) {
-      this.spawnBush(x);
+      this.addBush(x);
     }
   }
 
-  private spawnBush(x: number): void {
+  private addBush(x: number): void {
     const items = ['bush-1', 'bush-2', 'bush-3', 'tree-1', 'tree-2', 'street-lamp'];
     const key = items[Math.floor(Math.random() * items.length)];
     const roadTopY = this.h * 0.64;
@@ -505,7 +498,7 @@ export class GameScene extends Phaser.Scene {
     this.bushTimer += delta;
     if (this.bushTimer >= 800 + Math.random() * 600) {
       this.bushTimer = 0;
-      this.spawnBush(this.w + 80);
+      this.addBush(this.w + 80);
     }
   }
 }

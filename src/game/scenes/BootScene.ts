@@ -87,7 +87,7 @@ export class BootScene extends Phaser.Scene {
         // Find bounding box of non-transparent pixels
         const imgData = tmpCtx.getImageData(0, 0, PLAYER_FW, PLAYER_FH);
         // Use margin to avoid picking up pixels from adjacent rows/cols
-        const bounds = this.findBounds(imgData, PLAYER_FW, PLAYER_FH, 12);
+        const bounds = this.findBounds(imgData, PLAYER_FW, PLAYER_FH, 12, 2);
 
         if (bounds) {
           const charW = bounds.right - bounds.left;
@@ -115,13 +115,13 @@ export class BootScene extends Phaser.Scene {
   }
 
   private findBounds(
-    imgData: ImageData, w: number, h: number, margin = 0
+    imgData: ImageData, w: number, h: number, margin = 0, bottomMargin = 0
   ): { left: number; top: number; right: number; bottom: number } | null {
     const d = imgData.data;
     let left = w, top = h, right = 0, bottom = 0;
     let found = false;
 
-    for (let y = margin; y < h - margin; y++) {
+    for (let y = margin; y < h - bottomMargin; y++) {
       for (let x = margin; x < w - margin; x++) {
         const a = d[(y * w + x) * 4 + 3];
         // Also skip near-white pixels (background)

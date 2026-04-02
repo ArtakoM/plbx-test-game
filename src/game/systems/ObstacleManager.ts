@@ -2,9 +2,6 @@ import Phaser from 'phaser';
 import { Player } from '../objects/Player';
 import { CoinManager } from './CoinManager';
 
-// Enemy frame: 516x512, 4 frames in a row
-// Cone: 119x135
-
 export class ObstacleManager {
   private scene: Phaser.Scene;
   private staticGroup: Phaser.Physics.Arcade.Group;
@@ -34,9 +31,7 @@ export class ObstacleManager {
     }
   }
 
-  setCoinManager(coins: CoinManager): void {
-    this.coins = coins;
-  }
+  setCoinManager(coins: CoinManager): void { this.coins = coins; }
 
   setupCollision(player: Player, onHit: () => void): void {
     this.scene.physics.add.overlap(player, this.staticGroup, () => onHit(), undefined, this);
@@ -44,29 +39,7 @@ export class ObstacleManager {
   }
 
   stop(): void { this.stopped = true; }
-
-  handleResize(groundY: number, oldW: number): void {
-    this.groundY = groundY;
-    const h = this.scene.scale.height;
-    const w = this.scene.scale.width;
-    const xRatio = w / oldW;
-
-    const coneScale = (h * 0.10) / 135;
-    this.staticGroup.getChildren().forEach((obj) => {
-      const s = obj as Phaser.Physics.Arcade.Sprite;
-      s.x *= xRatio;
-      s.y = groundY;
-      s.setScale(coneScale);
-    });
-
-    const enemyScale = (h * 0.20) / 512;
-    this.dynamicGroup.getChildren().forEach((obj) => {
-      const s = obj as Phaser.Physics.Arcade.Sprite;
-      s.x *= xRatio;
-      s.y = groundY;
-      s.setScale(enemyScale);
-    });
-  }
+  setGroundY(y: number): void { this.groundY = y; }
 
   update(delta: number, speed: number): void {
     if (!this.stopped) {
@@ -96,14 +69,12 @@ export class ObstacleManager {
     const w = this.scene.scale.width;
     const spacing = h * 0.12;
 
-    // Guarantee at least 3 of each type, then randomize
     let spawnCone: boolean;
     if (this.coneCount < 3 && this.enemyCount >= 3) {
       spawnCone = true;
     } else if (this.enemyCount < 3 && this.coneCount >= 3) {
       spawnCone = false;
     } else if (this.coneCount < 3 && this.enemyCount < 3) {
-      // Alternate: first cone, then enemy, etc.
       spawnCone = this.coneCount <= this.enemyCount;
     } else {
       spawnCone = Math.random() < 0.6;
@@ -111,10 +82,8 @@ export class ObstacleManager {
 
     if (spawnCone) {
       this.coneCount++;
-      // Cone + coins above it
-      // Place cone so the arc peak (3rd coin) aligns with cone, and all coins start off-screen
       const arcStart = w + 50;
-      const coneX = arcStart + spacing * 2; // cone under the peak coin
+      const coneX = arcStart + spacing * 2;
 
       const scale = (h * 0.10) / 135;
       const cone = this.staticGroup.create(coneX, this.groundY, 'cone') as Phaser.Physics.Arcade.Sprite;
@@ -128,7 +97,6 @@ export class ObstacleManager {
       this.coins?.spawnArcAt(arcStart);
     } else {
       this.enemyCount++;
-      // Enemy (no coins - player must avoid)
       const scale = (h * 0.20) / 512;
       const enemy = this.dynamicGroup.create(w + 60, this.groundY, 'enemy') as Phaser.Physics.Arcade.Sprite;
       enemy.setScale(scale);

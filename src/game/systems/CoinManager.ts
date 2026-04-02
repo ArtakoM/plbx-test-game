@@ -3,8 +3,6 @@ import { Player } from '../objects/Player';
 import { UIManager } from './UIManager';
 
 const COIN_FRAME_SIZE = 581;
-
-// Triangle arc heights as fraction of screen height above ground
 const ARC_HEIGHTS = [0.08, 0.20, 0.27, 0.20, 0.08];
 
 export class CoinManager {
@@ -34,7 +32,6 @@ export class CoinManager {
       const cy = c.y;
       const coinScale = c.scaleX;
 
-      // Remove from physics group but keep sprite visible for animation
       this.group.remove(c, false, false);
       if (c.body) (c.body as Phaser.Physics.Arcade.Body).enable = false;
       c.setScrollFactor(0);
@@ -44,7 +41,6 @@ export class CoinManager {
       this.scene.sound.play('coin-sfx', { volume: 0.3 });
       this.onScoreChange?.(this.score);
 
-      // Fly coin to score icon
       const target = this.ui?.getCoinIconPosition() ?? { x: this.scene.scale.width - 50, y: 30 };
       this.scene.tweens.add({
         targets: c,
@@ -55,7 +51,6 @@ export class CoinManager {
         duration: 500,
         ease: 'Quad.easeIn',
       });
-      // Fade out with delay
       this.scene.tweens.add({
         targets: c,
         alpha: 0,
@@ -71,45 +66,17 @@ export class CoinManager {
   }
 
   stop(): void { this.stopped = true; }
-
   setUI(ui: UIManager): void { this.ui = ui; }
+  setGroundY(y: number): void { this.groundY = y; }
 
-  handleResize(groundY: number, oldW: number, oldH: number): void {
-    const oldGroundY = this.groundY;
-    this.groundY = groundY;
-    const w = this.scene.scale.width;
-    const h = this.scene.scale.height;
-    const newScale = (h * 0.06) / COIN_FRAME_SIZE;
-    const oldSpacing = oldH * 0.12;
-    const newSpacing = h * 0.12;
-    const xRatio = w / oldW;
-
-    const coins = this.group.getChildren() as Phaser.Physics.Arcade.Sprite[];
-    for (let i = 0; i < coins.length; i += 5) {
-      const arc = coins.slice(i, i + 5);
-      if (arc.length === 0) break;
-      const anchorX = arc[0].x * xRatio;
-      for (let j = 0; j < arc.length; j++) {
-        const s = arc[j];
-        s.x = anchorX + j * newSpacing;
-        const aboveGround = oldGroundY - s.y;
-        s.y = groundY - aboveGround * (groundY / oldGroundY);
-        s.setScale(newScale);
-      }
-    }
-  }
-
-  /** Spawn a triangle arc of coins at the given x position */
   spawnArcAt(x: number): void {
     if (this.stopped) return;
-    // Skip if too close to the last arc
-    const spacing = this.scene.scale.height * 0.12;
+    const h = this.scene.scale.height;
+    const spacing = h * 0.12;
     const arcWidth = spacing * 5;
     if (Math.abs(x - this.lastSpawnX) < arcWidth * 1.5) return;
     this.lastSpawnX = x;
-    // Push standalone timer back
     this.spawnTimer = -2000;
-    const h = this.scene.scale.height;
     const coinScale = (h * 0.06) / COIN_FRAME_SIZE;
 
     for (let i = 0; i < 5; i++) {
@@ -124,7 +91,6 @@ export class CoinManager {
   }
 
   update(delta: number, speed: number): void {
-    // Standalone coin arcs (no cone)
     if (!this.stopped) {
       this.spawnTimer += delta;
       if (this.spawnTimer >= this.spawnInterval) {
@@ -134,7 +100,6 @@ export class CoinManager {
       }
     }
 
-    // Scroll coins and track last spawn position
     this.lastSpawnX -= speed;
 
     this.group.getChildren().forEach((obj) => {
