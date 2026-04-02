@@ -30,4 +30,19 @@ const config: Phaser.Types.Core.GameConfig = {
   scene: [BootScene, GameScene],
 };
 
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
+
+// Force Phaser to resize on mobile orientation changes
+// Mobile browsers don't always fire resize events reliably
+function forceResize(): void {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  game.scale.resize(w, h);
+}
+
+window.addEventListener('resize', forceResize);
+window.addEventListener('orientationchange', () => {
+  // Mobile needs a delay for the viewport to settle
+  setTimeout(forceResize, 100);
+  setTimeout(forceResize, 300);
+});
