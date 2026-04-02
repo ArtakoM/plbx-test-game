@@ -60,4 +60,21 @@ export class UIManager {
   getCoinIconPosition(): { x: number; y: number } {
     return { x: this.coinIcon.x, y: this.coinIcon.y };
   }
+
+  handleResize(): void {
+    const w = this.scene.scale.width;
+    const fs = Math.min(w * 0.05, 40);
+    const centerY = 16 + fs / 2;
+    const iconSize = fs * 1.0;
+
+    this.heartsText.setFontSize(fs);
+    this.heartsText.setPosition(16, centerY);
+
+    this.scoreText.setFontSize(fs * 0.9);
+    this.scoreText.setPosition(w - 20, centerY);
+
+    this.coinIcon.setScale(iconSize / 581);
+    this.coinIcon.y = centerY;
+    this.coinIcon.x = this.scoreText.x - this.scoreText.width - 2;
+  }
 }

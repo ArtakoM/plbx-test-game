@@ -19,6 +19,7 @@ const RED_BTN: ButtonColors = { shadow: 0x8b0000, main: 0xdd2222, highlight: 0xf
 
 export class GameScene extends Phaser.Scene {
   private player!: Player;
+  private background!: ParallaxBackground;
   private obstacles!: ObstacleManager;
   private coins!: CoinManager;
   private ui!: UIManager;
@@ -33,6 +34,11 @@ export class GameScene extends Phaser.Scene {
   private bgMusic?: Phaser.Sound.BaseSound;
   private bushes: Phaser.GameObjects.Image[] = [];
   private bushTimer = 0;
+  private groundRect!: Phaser.GameObjects.Rectangle;
+  private bannerObjects: Phaser.GameObjects.GameObject[] = [];
+  private lastEndScreenArgs?: { title: string; subtitle: string; colors: ButtonColors };
+  private prevW = 0;
+  private prevH = 0;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -49,20 +55,24 @@ export class GameScene extends Phaser.Scene {
     this.gameSpeed = 4;
     this.distanceTraveled = 0;
     this.spawningDone = false;
+    this.bannerObjects = [];
+    this.lastEndScreenArgs = undefined;
+    this.prevW = this.w;
+    this.prevH = this.h;
 
     this.physics.world.gravity.y = this.h * 2;
 
-    const groundRect = this.add.rectangle(this.w / 2, this.groundY + 50, this.w * 2, 100, 0x000000, 0);
-    this.physics.add.existing(groundRect, true);
+    this.groundRect = this.add.rectangle(this.w / 2, this.groundY + 50, this.w * 2, 100, 0x000000, 0);
+    this.physics.add.existing(this.groundRect, true);
 
-    new ParallaxBackground(this);
+    this.background = new ParallaxBackground(this);
 
     this.bushes = [];
     this.bushTimer = 0;
     this.spawnInitialBushes();
 
     this.player = new Player(this, this.w * 0.2, this.groundY);
-    this.physics.add.collider(this.player, groundRect);
+    this.physics.add.collider(this.player, this.groundRect);
 
     this.ui = new UIManager(this);
     this.createBanner();
@@ -82,9 +92,87 @@ export class GameScene extends Phaser.Scene {
 
     this.input.on('pointerdown', () => this.handleInput());
     this.input.keyboard?.on('keydown-SPACE', () => this.handleInput());
+    // Phaser resize event
+    this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
+      this.handleResize(gameSize.width, gameSize.height);
+    });
+
+    // Native orientation change — mobile browsers need extra time to settle
+    const onOrientationChange = () => {
+      // Retry at multiple intervals to catch the final settled dimensions
+      [100, 300, 500].forEach((delay) => {
+        this.time.delayedCall(delay, () => {
+          this.handleResize(this.w, this.h);
+        });
+      });
+    };
+
+    if (screen.orientation) {
+      screen.orientation.addEventListener('change', onOrientationChange);
+      this.events.on('destroy', () => {
+        screen.orientation.removeEventListener('change', onOrientationChange);
+      });
+    }
+    window.addEventListener('orientationchange', onOrientationChange);
+    this.events.on('destroy', () => {
+      window.removeEventListener('orientationchange', onOrientationChange);
+    });
+  }
+
+  private handleResize(newW: number, newH: number): void {
+    const oldW = this.prevW;
+    const oldH = this.prevH;
+    if (oldW === newW && oldH === newH) return;
+    this.prevW = newW;
+    this.prevH = newH;
+
+    // World bounds + gravity + ground
+    this.physics.world.setBounds(0, 0, this.w, this.h);
+    this.physics.world.gravity.y = this.h * 2;
+    this.groundRect.setPosition(this.w / 2, this.groundY + 50);
+    this.groundRect.setSize(this.w * 2, 100);
+    (this.groundRect.body as Phaser.Physics.Arcade.StaticBody).updateFromGameObject();
+
+    // Scale game speed proportionally
+    this.gameSpeed *= this.w / oldW;
+
+    // Background
+    this.background.handleResize();
+
+    // Player
+    const oldGroundY = oldH * 0.80;
+    const newPlayerX = this.player.x * (this.w / oldW);
+    this.player.handleResize(this.groundY, oldGroundY, this.h, newPlayerX);
+
+    // Obstacles + coins + finish line
+    this.obstacles.handleResize(this.groundY, oldW);
+    this.coins.handleResize(this.groundY, oldW, oldH);
+    this.finishLine.handleResize(this.groundY, oldW);
+
+    // UI
+    this.ui.handleResize();
+
+    // Decorations
+    this.bushes.forEach((b) => b.destroy());
+    this.bushes = [];
+    this.spawnInitialBushes();
+
+    // Banner
+    this.createBanner();
+
+    // Active overlay
+    if (this.gameState === 'idle') {
+      this.showStartScreen();
+    } else if (this.lastEndScreenArgs) {
+      const { title, subtitle, colors } = this.lastEndScreenArgs;
+      this.showEndScreen(title, subtitle, colors);
+    }
   }
 
   private createBanner(): void {
+    this.bannerObjects.forEach((obj) => obj.destroy());
+    this.bannerObjects = [];
+
     const isPortrait = this.h > this.w;
     const bannerKey = isPortrait ? 'banner-pr' : 'banner-ls';
     const banner = this.add.image(this.w / 2, this.h, bannerKey)
@@ -102,9 +190,11 @@ export class GameScene extends Phaser.Scene {
     const btnX = this.w - btnW / 2 - this.w * 0.08;
     const btnY = this.h - bannerH / 2;
 
-    this.createButton(btnX, btnY, btnW, btnH, 'DOWNLOAD', ORANGE_BTN, 151, () => {
+    const container = this.createButton(btnX, btnY, btnW, btnH, 'DOWNLOAD', ORANGE_BTN, 151, () => {
       window.open('https://example.com', '_blank');
     });
+
+    this.bannerObjects.push(banner, container);
   }
 
   private createButton(
@@ -253,6 +343,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private showEndScreen(title: string, subtitle: string, btnColors: ButtonColors): void {
+    this.lastEndScreenArgs = { title, subtitle, colors: btnColors };
     this.clearOverlay();
     this.physics.pause();
 

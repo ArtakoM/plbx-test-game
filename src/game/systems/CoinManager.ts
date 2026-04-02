@@ -74,6 +74,31 @@ export class CoinManager {
 
   setUI(ui: UIManager): void { this.ui = ui; }
 
+  handleResize(groundY: number, oldW: number, oldH: number): void {
+    const oldGroundY = this.groundY;
+    this.groundY = groundY;
+    const w = this.scene.scale.width;
+    const h = this.scene.scale.height;
+    const newScale = (h * 0.06) / COIN_FRAME_SIZE;
+    const oldSpacing = oldH * 0.12;
+    const newSpacing = h * 0.12;
+    const xRatio = w / oldW;
+
+    const coins = this.group.getChildren() as Phaser.Physics.Arcade.Sprite[];
+    for (let i = 0; i < coins.length; i += 5) {
+      const arc = coins.slice(i, i + 5);
+      if (arc.length === 0) break;
+      const anchorX = arc[0].x * xRatio;
+      for (let j = 0; j < arc.length; j++) {
+        const s = arc[j];
+        s.x = anchorX + j * newSpacing;
+        const aboveGround = oldGroundY - s.y;
+        s.y = groundY - aboveGround * (groundY / oldGroundY);
+        s.setScale(newScale);
+      }
+    }
+  }
+
   /** Spawn a triangle arc of coins at the given x position */
   spawnArcAt(x: number): void {
     if (this.stopped) return;

@@ -50,7 +50,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       anims.create({
         key: 'player-run',
         frames: anims.generateFrameNumbers('player', { start: 8, end: 15 }),
-        frameRate: 12,
+        frameRate: 6,
         repeat: -1,
       });
     }
@@ -114,6 +114,26 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   getState(): PlayerState { return this.currentState; }
+
+  handleResize(groundY: number, oldGroundY: number, h: number, newX: number): void {
+    this.setScale((h * 0.20) / FRAME_H);
+    this.jumpVelocity = -(h * 1.05);
+
+    const body = this.body as Phaser.Physics.Arcade.Body;
+
+    if (this.currentState === 'jumping') {
+      const aboveGround = oldGroundY - this.y;
+      this.x = newX;
+      this.y = groundY - aboveGround * (groundY / oldGroundY);
+      if (this.y > groundY) this.y = groundY;
+      // Scale velocity proportionally
+      body.velocity.y *= h / (oldGroundY / 0.80);
+    } else {
+      body.stop();
+      this.setPosition(newX, groundY);
+      body.updateFromGameObject();
+    }
+  }
 
   update(_time: number, delta: number): void {
     if (this.invulnerable) {

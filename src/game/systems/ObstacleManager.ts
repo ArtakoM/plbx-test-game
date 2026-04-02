@@ -45,6 +45,29 @@ export class ObstacleManager {
 
   stop(): void { this.stopped = true; }
 
+  handleResize(groundY: number, oldW: number): void {
+    this.groundY = groundY;
+    const h = this.scene.scale.height;
+    const w = this.scene.scale.width;
+    const xRatio = w / oldW;
+
+    const coneScale = (h * 0.10) / 135;
+    this.staticGroup.getChildren().forEach((obj) => {
+      const s = obj as Phaser.Physics.Arcade.Sprite;
+      s.x *= xRatio;
+      s.y = groundY;
+      s.setScale(coneScale);
+    });
+
+    const enemyScale = (h * 0.20) / 512;
+    this.dynamicGroup.getChildren().forEach((obj) => {
+      const s = obj as Phaser.Physics.Arcade.Sprite;
+      s.x *= xRatio;
+      s.y = groundY;
+      s.setScale(enemyScale);
+    });
+  }
+
   update(delta: number, speed: number): void {
     if (!this.stopped) {
       this.spawnTimer += delta;

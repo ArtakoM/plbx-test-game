@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 
-import playerImg from '../../../assets/player.webp';
+import playerImg from '../../../assets/player.png';
 import enemyImg from '../../../assets/enemy.webp';
 import coneImg from '../../../assets/cone.webp';
 import coinImg from '../../../assets/coin.webp';

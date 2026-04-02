@@ -208,6 +208,16 @@ export class FinishLine {
     });
   }
 
+  handleResize(groundY: number, oldW: number): void {
+    this.groundY = groundY;
+    const w = this.scene.scale.width;
+    this.x *= w / oldW;
+    this.zone.x = this.x;
+    const zoneH = this.scene.scale.height * 0.3;
+    this.zone.setSize(20, zoneH);
+    this.zone.y = groundY - zoneH / 2;
+  }
+
   update(speed: number): void {
     if (!this.triggered) {
       this.x -= speed;
