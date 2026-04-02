@@ -9,9 +9,7 @@ export class UIManager {
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
     const w = scene.scale.width;
-    const h = scene.scale.height;
     const fs = Math.min(w * 0.05, 40);
-
     const centerY = 16 + fs / 2;
 
     this.heartsText = scene.add.text(16, centerY, this.getHeartsString(3), {
@@ -21,7 +19,6 @@ export class UIManager {
       .setScrollFactor(0)
       .setDepth(100);
 
-    // Coin icon + score number (top-right, vertically aligned with hearts)
     const iconSize = fs * 1.0;
     const coinScale = iconSize / 581;
 

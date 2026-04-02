@@ -43,6 +43,8 @@ export class GameScene extends Phaser.Scene {
   private get groundY(): number { return this.h * 0.80; }
 
   create(): void {
+    this.sound.stopAll();
+
     this.gameState = 'idle';
     this.gameSpeed = 4;
     this.distanceTraveled = 0;
@@ -59,9 +61,7 @@ export class GameScene extends Phaser.Scene {
     this.bushTimer = 0;
     this.spawnInitialBushes();
 
-    const isPortrait = this.h > this.w;
-    const playerX = isPortrait ? this.w * 0.15 : this.w * 0.3;
-    this.player = new Player(this, playerX, this.groundY);
+    this.player = new Player(this, this.w * 0.2, this.groundY);
     this.physics.add.collider(this.player, groundRect);
 
     this.ui = new UIManager(this);
@@ -82,7 +82,6 @@ export class GameScene extends Phaser.Scene {
 
     this.input.on('pointerdown', () => this.handleInput());
     this.input.keyboard?.on('keydown-SPACE', () => this.handleInput());
-    this.scale.on('resize', () => this.scene.restart());
   }
 
   private createBanner(): void {
@@ -220,11 +219,17 @@ export class GameScene extends Phaser.Scene {
     this.showEndScreen('Congratulations!', 'Choose your reward!', ORANGE_BTN);
   }
 
+  private handleLose(): void {
+    this.gameState = 'lose';
+    this.bgMusic?.stop();
+    this.sound.play('fail-sfx', { volume: 0.6 });
+    this.showEndScreen("You didn't make it!", 'Try again on the app!', RED_BTN);
+  }
+
   private spawnConfetti(): void {
     const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff, 0xff8800, 0xff69b4];
-    const count = 80;
 
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < 80; i++) {
       const x = Math.random() * this.w;
       const size = 4 + Math.random() * 8;
       const color = colors[Math.floor(Math.random() * colors.length)];
@@ -245,13 +250,6 @@ export class GameScene extends Phaser.Scene {
         onComplete: () => piece.destroy(),
       });
     }
-  }
-
-  private handleLose(): void {
-    this.gameState = 'lose';
-    this.bgMusic?.stop();
-    this.sound.play('fail-sfx', { volume: 0.6 });
-    this.showEndScreen("You didn't make it!", 'Try again on the app!', RED_BTN);
   }
 
   private showEndScreen(title: string, subtitle: string, btnColors: ButtonColors): void {

@@ -6,8 +6,6 @@ export class ParallaxBackground {
   constructor(scene: Phaser.Scene) {
     const w = scene.scale.width;
     const h = scene.scale.height;
-
-    // bg-far.png is 1707x704. Scale tile to fill screen height.
     const imgHeight = 656;
     const scale = h / imgHeight;
 
