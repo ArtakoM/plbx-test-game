@@ -21,7 +21,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const scale = (h * 0.20) / FRAME_H;
     this.setScale(scale);
     this.setOrigin(0.5, 1);
-    this.setCollideWorldBounds(true);
+    this.setCollideWorldBounds(false);
 
     this.jumpVelocity = -(h * 1.05);
 

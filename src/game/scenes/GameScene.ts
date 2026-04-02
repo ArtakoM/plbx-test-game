@@ -35,6 +35,7 @@ export class GameScene extends Phaser.Scene {
   private bushTimer = 0;
   private bannerObjects: Phaser.GameObjects.GameObject[] = [];
   private lastEndScreenArgs?: { title: string; subtitle: string; colors: ButtonColors };
+  private groundRect!: Phaser.GameObjects.Rectangle;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -60,8 +61,9 @@ export class GameScene extends Phaser.Scene {
 
     this.physics.world.gravity.y = this.h * 2;
 
-    const groundRect = this.add.rectangle(this.w / 2, this.h * 0.80 + 50, this.w * 4, 100, 0x000000, 0);
-    this.physics.add.existing(groundRect, true);
+    this.groundRect = this.add.rectangle(this.w / 2, this.h * 0.80 + 50, this.w * 4, 100, 0x000000, 0);
+    this.groundRect.setScrollFactor(0); // Exclude from universal transform
+    this.physics.add.existing(this.groundRect, true);
 
     this.background = new ParallaxBackground(this);
 
@@ -70,7 +72,7 @@ export class GameScene extends Phaser.Scene {
     this.spawnInitialBushes();
 
     this.player = new Player(this, this.w * 0.2, this.h * 0.80);
-    this.physics.add.collider(this.player, groundRect);
+    this.physics.add.collider(this.player, this.groundRect);
 
     this.ui = new UIManager(this);
     this.createBanner();
@@ -106,8 +108,10 @@ export class GameScene extends Phaser.Scene {
     const sx = this.w / oldW;
     const sy = this.h / oldH;
 
-    // Scale ALL world objects proportionally
+    // Scale ALL world objects proportionally (except player and ground — handled separately)
     this.children.list.forEach((child) => {
+      if (child === this.player || child === this.groundRect) return;
+
       const go = child as unknown as {
         scrollFactorX?: number;
         scrollFactorY?: number;
@@ -129,17 +133,31 @@ export class GameScene extends Phaser.Scene {
     });
 
     // Update physics
+    this.physics.world.setBounds(0, 0, this.w, this.h);
     this.physics.world.gravity.y = this.h * 2;
 
-    // Sync static bodies
-    this.physics.world.staticBodies.entries.forEach((body: Phaser.Physics.Arcade.StaticBody) => {
-      body.updateFromGameObject();
-    });
+    // Reposition ground collider explicitly (excluded from universal transform)
+    this.groundRect.setPosition(this.w / 2, this.h * 0.80 + 50);
+    this.groundRect.setSize(this.w * 4, 100);
+    (this.groundRect.body as Phaser.Physics.Arcade.StaticBody).updateFromGameObject();
 
-    // Player: scale velocity and update jump params
+    // Player: recalculate from scratch
+    const newGroundY = this.h * 0.80;
+    const newPlayerScale = (this.h * 0.20) / 188;
+    this.player.setScale(newPlayerScale);
+    this.player.x = this.w * 0.2;
+
     const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
-    playerBody.velocity.y *= sy;
+    if (this.player.getState() === 'jumping') {
+      const oldAbove = oldH * 0.80 - this.player.y;
+      this.player.y = newGroundY - oldAbove * sy;
+      playerBody.velocity.y *= sy;
+    } else {
+      this.player.y = newGroundY;
+      playerBody.velocity.y = 0;
+    }
     this.player.updateJumpVelocity(this.h);
+
 
     // Update ground level for future spawns
     this.obstacles.setGroundY(this.h * 0.80);
@@ -423,13 +441,15 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(time: number, delta: number): void {
+    // Always update player physics (so gravity works after resize in idle)
+    this.player.update(time, delta);
+
     if (this.gameState === 'idle') return;
 
     if (this.gameState === 'running') {
       const dt = delta / 16.67;
       const speed = this.gameSpeed * dt;
 
-      this.player.update(time, delta);
       this.background.update(speed);
       this.obstacles.update(delta, speed);
       this.coins.update(delta, speed);
@@ -447,7 +467,6 @@ export class GameScene extends Phaser.Scene {
     }
 
     if (this.gameState === 'win' || this.gameState === 'lose') {
-      this.player.update(time, delta);
       this.finishLine.update(0);
     }
   }
